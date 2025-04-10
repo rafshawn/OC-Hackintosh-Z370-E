@@ -1,6 +1,9 @@
-# Hardware Configuration
+# OC-Hackintosh-Z370-E
+OpenCore EFI for a machine running i5-8600K, RX 5700 XT, on an ROG Z370-E Board.
+
+## Hardware Configuration
 - **Motherboard**: [ROG STRIX Z370-E GAMING](https://rog.asus.com/motherboards/rog-strix/rog-strix-z370-e-gaming-model/)
-	- **BIOS Ver.**: 3005
+	- **BIOS Version**: 3005
 	- **Ethernet**: Intel I219-V (2)
 	- [Manual](http://dlcdnets.asus.com/pub/ASUS/mb/LGA1151/ROG_STRIX_Z370-E_GAMING/E13238_ROG_STRIX_Z370-E_GAMING_UM_WEB_082417.pdf)
 - **CPU**: [Intel Core(TM) i5-8600K CPU @ 3.60GHz](https://www.techpowerup.com/cpu-specs/core-i5-8600k.c1948) (*Coffee Lake*)
@@ -10,9 +13,10 @@
 - **Memory**: [A-DATA XPG DDR4 2400MHz](https://www.tweaktown.com/reviews/6686/adata-xpg-z1-ddr4-2400-64gb-quad-channel-memory-kit-review/index.html) (4x8GB)
 - **Storage**: [Crucial MX500 500GB 3D NAND SATA SSD](https://www.crucial.com/ssd/mx500/ct500mx500ssd1)
 
-# OS Settings
+## OS Settings
 - **SMBIOS**: iMac19,1
 - **MacOS Version**: Ventura 13.6.3
+- **OpenCore Version**: 1.0.1
 
 # OpenCore
 ## Setting up your EFI partition
@@ -31,7 +35,7 @@
 > [!WARNING]
 > PC won't be able to boot to macOS if BIOS settings are not set up properly
 
-BIOS settings for ROG Z370-E. *(Refer to OpenCore [Coffee Lake guide](https://dortania.github.io/OpenCore-Install-Guide/config.plist/coffee-lake.html#intel-bios-settings))*
+BIOS settings for ROG Z370-E (*Refer to OpenCore [Coffee Lake guide](https://dortania.github.io/OpenCore-Install-Guide/config.plist/coffee-lake.html#intel-bios-settings)*).
 
 ## Disable:
 | Setting              | Location/Mode                                             |
@@ -84,7 +88,7 @@ BIOS settings for ROG Z370-E. *(Refer to OpenCore [Coffee Lake guide](https://do
 # Issues
 ## Kernel Panic (`Invalid frame pointer`)
 > [!NOTE]  
-> This really depends on your setup. Refer to OpenCore [Troubleshooting guide](https://dortania.github.io/OpenCore-Install-Guide/troubleshooting/extended/kernel-issues.html#kernel-panic-on-invalid-frame-pointer) for a detailed fix.
+> This really depends on your setup[^4]. Refer to OpenCore [Troubleshooting guide](https://dortania.github.io/OpenCore-Install-Guide/troubleshooting/extended/kernel-issues.html#kernel-panic-on-invalid-frame-pointer) for a detailed fix.
 
 The [MMIO](https://www.geeksforgeeks.org/memory-mapped-i-o-and-isolated-i-o/) basically maps control registers into the system memory space. As far as I know, it's basically a low-level crash. macOS tries to interact with MMIO regions that it doesn't understand/support, causing the kernel to panic.
 
@@ -96,15 +100,16 @@ Backtrace terminated-invalid frame pointer
 ** In Memory Panic Stackshot Succeeded **
 ```
 
+[^4]: I stopped experiencing this issue after upgrading my GPU. I know because my `MmioWhitelist` is empty and macOS boots just fine.
+
 ### Using `DevirtualiseMmio`
 > [!IMPORTANT]
 > This issue is very hardware-specific, which is why trial and error is the best way to narrow it down. Make sure you're using OpenCore `Debug` version.
 
-`DevirtualiseMmio` is a quirk that prevents macOS from directly accessing certain MMIO regions. You should probably [read more about it here](https://dortania.github.io/OpenCore-Install-Guide/extras/kaslr-fix.html#finding-the-slide-value), but this is what I did to solve my issue.
+`DevirtualiseMmio` is a quirk that prevents macOS from directly accessing certain MMIO regions. You should probably [read more about it here](https://dortania.github.io/OpenCore-Install-Guide/extras/kaslr-fix.htmll#using-devirtualisemmio), but this is what I did to solve my issue.
 
 1. Enabled `DevirtualiseMmio` in `config.plist` under `Root\Booter\Quirks`
 2. Identify bad MMIO regions
-
 	- I identified 6 potentially bad regions, and then converted their values from hex to decimal.
 	- Math it out or just use a [converter](https://www.rapidtables.com/convert/number/hex-to-decimal.html).
 	- This is my table of values:
@@ -119,16 +124,22 @@ Backtrace terminated-invalid frame pointer
 | 5      | `0xFF00 0000`             | 4,278,190,080 |
 
 3. Start troubleshooting
-
 	- Don't know which region is bad until...
 	- ...block all MMIO except one and try each region (trial and error).
 	- In `config.plist`, create new children under `Root\Booter\MmioWhitelist` and make sure each item is a `Dictionary`.
-	- Enable each item except one ((`Boolean: False`)).
+	- Enable each item except one (`Boolean: False`).
 	- Save, flush, reboot.
 	- If it doesn't work, repeat until you find the bad address (no more kernel panic).
 
 ## RTC Write Issues
 - Prompts boot message *"The system has POSTed in safe mode"* after rebooting from MacOS
+- My fix was simple:
+	1. Open `config.plist` and navigate to
+	 ```
+	 Root\Kernel\Quirks
+	 ```
+	2. `DisableRtcChecksum` → `True`
+	3. - Save, flush, reboot to test
 - Refer to *[Fixing RTC write issues (guide)](https://dortania.github.io/OpenCore-Post-Install/misc/rtc.html#finding-our-bad-rtc-region)* for more info
 
 ## Unsynced time after rebooting to W11
@@ -184,10 +195,11 @@ All I did was **added the boot argument** `agdpmod=pikera`, which is required fo
 
 # Checklist
 - [x] Fix Kernel Panic
-- [ ] Fix RTC Write Issue
+- [x] Fix RTC Write Issue
 - [x] Fix Time Sync
 - [ ] Fix Sleep
 - [ ] [Add GUI and Boot-chime](https://dortania.github.io/OpenCore-Post-Install/cosmetic/gui.html)
 - [ ] ~~Write~~ Finish issues section of README
 - [ ] Finish README
 - [x] Complete BIOS settings tables
+- [ ] Re-configure USB-mapping
