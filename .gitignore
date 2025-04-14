@@ -1,0 +1,33 @@
+# OpenCore
+EFI/OC
+EFI/BOOT/BOOTX64.efi
+config.plist
+config_bak.plist
+Kernel
+Tools
+Resources
+Drivers
+Scripts
+Archive\
+
+# OpenCore temporary files
+*.efi
+*.iso
+*.img
+*.dmg
+*.zip
+*.tar.*
+*.7z
+
+# kext caches
+System/Library/Caches
+System/Library/Extensions/Caches
+
+# misc
+**/._*
+**/.DS_Store
+**/.Trashes
+**/.Spotlight-V100
+**/.fseventsd
+**/.vol
+**/*.lnk
