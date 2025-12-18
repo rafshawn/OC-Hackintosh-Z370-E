@@ -126,7 +126,7 @@ BIOS settings for ROG Z370-E (*Refer to OpenCore [Coffee Lake guide](https://dor
 
 # Issues
 Here's a list of issues I ran into trying to set up my build. Linked how I fixed each issue in detail:
-- [**Kernel Panic**](.\Issues\ISSUES.md#kernel-panic-invalid-frame-pointer)
+- [**Kernel Panic**](Issues/ISSUES.md#kernel-panic-invalid-frame-pointer)
 	- Prompts kernel message *"In Memory Panic Stackshot Succeeded"*
 	- Fixed using `DevirtualiseMmio`
 - [**RTC Write Issues**](.\Issues\ISSUES.md#rtc-write-issues)
